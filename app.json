@@ -1,4 +1,18 @@
 {
   "name": "studybuddy",
-  "displayName": "studybuddy"
+  "displayName": "studybuddy",
+  "expo": {
+    "android": {
+      "googleServicesFile": "./google-services.json"
+    },
+    "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "bundleIdentifier": "com.max.studybuddy"
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/perf",
+      "@react-native-firebase/crashlytics"
+    ]
+  }
 }

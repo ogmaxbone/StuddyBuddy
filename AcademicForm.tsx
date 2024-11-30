@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-
+import { useSignUp } from './SignupContext';
 interface AcademicFormProps {
   onSubmit: () => void;
 }
-
 const AcademicForm: React.FC<AcademicFormProps> = ({ onSubmit }) => {
-  // Dummy data for each dropdown
+  const { updateSignUpData } = useSignUp();
+
   const schoolData = [
     { label: 'University of Texas at Austin', value: 'ut_austin' },
     { label: 'Texas A&M University', value: 'tamu' },
@@ -31,19 +31,52 @@ const AcademicForm: React.FC<AcademicFormProps> = ({ onSubmit }) => {
     { label: '2027', value: '2027' },
   ];
 
-  // State for each dropdown
-  const [school, setSchool] = useState<string | null>(null);
-  const [major, setMajor] = useState<string | null>(null);
-  const [graduationDate, setGraduationDate] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    school: '',
+    major: '',
+    graduationDate: ''
+  });
 
-  // Separate focus states for each dropdown
+  // Focus states
   const [schoolFocus, setSchoolFocus] = useState(false);
   const [majorFocus, setMajorFocus] = useState(false);
   const [graduationDateFocus, setGraduationDateFocus] = useState(false);
 
+  const validateForm = () => {
+    if (!formData.school) {
+      Alert.alert('Error', 'Please select your school');
+      return false;
+    }
+    if (!formData.major) {
+      Alert.alert('Error', 'Please select your major');
+      return false;
+    }
+    if (!formData.graduationDate) {
+      Alert.alert('Error', 'Please select your graduation date');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      // Get the label values instead of codes
+      const schoolLabel = schoolData.find(item => item.value === formData.school)?.label;
+      const majorLabel = majorData.find(item => item.value === formData.major)?.label;
+
+      // Update the signup context
+      updateSignUpData({
+        university: schoolLabel,
+        major: majorLabel,
+        graduationYear: formData.graduationDate
+      });
+
+      onSubmit();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* School Name Dropdown */}
       <Text style={styles.label}>School Name</Text>
       <Dropdown
         style={[styles.dropdown, schoolFocus && { borderColor: '#172554' }]}
@@ -58,16 +91,15 @@ const AcademicForm: React.FC<AcademicFormProps> = ({ onSubmit }) => {
         placeholder={!schoolFocus ? 'Choose school' : '...'}
         searchPlaceholder="Search..."
         search={false}
-        value={school}
+        value={formData.school}
         onFocus={() => setSchoolFocus(true)}
         onBlur={() => setSchoolFocus(false)}
         onChange={item => {
-          setSchool(item.value);
+          setFormData(prev => ({ ...prev, school: item.value }));
           setSchoolFocus(false);
         }}
       />
 
-      {/* Major Dropdown */}
       <Text style={styles.label}>Major</Text>
       <Dropdown
         style={[styles.dropdown, majorFocus && { borderColor: '#172554' }]}
@@ -82,16 +114,15 @@ const AcademicForm: React.FC<AcademicFormProps> = ({ onSubmit }) => {
         placeholder={!majorFocus ? 'Choose major' : '...'}
         searchPlaceholder="Search..."
         search={false}
-        value={major}
+        value={formData.major}
         onFocus={() => setMajorFocus(true)}
         onBlur={() => setMajorFocus(false)}
         onChange={item => {
-          setMajor(item.value);
+          setFormData(prev => ({ ...prev, major: item.value }));
           setMajorFocus(false);
         }}
       />
 
-      {/* Graduation Date Dropdown */}
       <Text style={styles.label}>Graduation Date</Text>
       <Dropdown
         style={[styles.dropdown, graduationDateFocus && { borderColor: '#172554' }]}
@@ -106,17 +137,19 @@ const AcademicForm: React.FC<AcademicFormProps> = ({ onSubmit }) => {
         placeholder={!graduationDateFocus ? 'Choose graduation date' : '...'}
         searchPlaceholder="Search..."
         search={false}
-        value={graduationDate}
+        value={formData.graduationDate}
         onFocus={() => setGraduationDateFocus(true)}
         onBlur={() => setGraduationDateFocus(false)}
         onChange={item => {
-          setGraduationDate(item.value);
+          setFormData(prev => ({ ...prev, graduationDate: item.value }));
           setGraduationDateFocus(false);
         }}
       />
 
-      {/* Continue Button */}
-      <TouchableOpacity style={styles.continueButton} onPress={onSubmit}>
+      <TouchableOpacity 
+        style={styles.continueButton} 
+        onPress={handleSubmit}
+      >
         <Text style={styles.continueButtonText}>Continue</Text>
       </TouchableOpacity>
     </View>

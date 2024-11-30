@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-
+import { useSignUp } from './SignupContext';
 interface StudyFormProps {
   onSubmit: () => void;
 }
 
 const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
-  // Data for each dropdown
+  const { updateSignUpData } = useSignUp();
+
   const studyTimeData = [
     { label: 'Morning', value: 'morning' },
     { label: 'Afternoon', value: 'afternoon' },
@@ -32,21 +33,63 @@ const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
     { label: 'International', value: 'international' },
   ];
 
-  // State for each dropdown
-  const [studyTime, setStudyTime] = useState<string | null>(null);
-  const [groupSize, setGroupSize] = useState<string | null>(null);
-  const [studyDuration, setStudyDuration] = useState<string | null>(null);
-  const [demographic, setDemographic] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    studyTime: '',
+    groupSize: '',
+    studyDuration: '',
+    demographic: ''
+  });
 
-  // Focus states for styling
+  // Focus states
   const [studyTimeFocus, setStudyTimeFocus] = useState(false);
   const [groupSizeFocus, setGroupSizeFocus] = useState(false);
   const [studyDurationFocus, setStudyDurationFocus] = useState(false);
   const [demographicFocus, setDemographicFocus] = useState(false);
 
+  const validateForm = () => {
+    if (!formData.studyTime) {
+      Alert.alert('Error', 'Please select your preferred study time');
+      return false;
+    }
+    if (!formData.groupSize) {
+      Alert.alert('Error', 'Please select your preferred group size');
+      return false;
+    }
+    if (!formData.studyDuration) {
+      Alert.alert('Error', 'Please select your preferred study duration');
+      return false;
+    }
+    if (!formData.demographic) {
+      Alert.alert('Error', 'Please select your preferred demographic');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      // Get the label values instead of codes
+      const studyTimeLabel = studyTimeData.find(item => item.value === formData.studyTime)?.label;
+      const groupSizeLabel = groupSizeData.find(item => item.value === formData.groupSize)?.label;
+      const studyDurationLabel = studyDurationData.find(item => item.value === formData.studyDuration)?.label;
+      const demographicLabel = demographicData.find(item => item.value === formData.demographic)?.label;
+
+      // Update the signup context
+      updateSignUpData({
+        studyPreferences: {
+          preferredTime: studyTimeLabel,
+          preferredGroupSize: groupSizeLabel,
+          preferredDuration: studyDurationLabel,
+          preferredDemographic: demographicLabel
+        }
+      });
+
+      onSubmit();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Preferred Study Time Dropdown */}
       <Text style={styles.label}>Preferred Study Time</Text>
       <Dropdown
         style={[styles.dropdown, studyTimeFocus && { borderColor: '#172554' }]}
@@ -59,16 +102,15 @@ const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
         labelField="label"
         valueField="value"
         placeholder={!studyTimeFocus ? 'Choose preferred time' : '...'}
-        value={studyTime}
+        value={formData.studyTime}
         onFocus={() => setStudyTimeFocus(true)}
         onBlur={() => setStudyTimeFocus(false)}
         onChange={item => {
-          setStudyTime(item.value);
+          setFormData(prev => ({ ...prev, studyTime: item.value }));
           setStudyTimeFocus(false);
         }}
       />
 
-      {/* Preferred Group Size Dropdown */}
       <Text style={styles.label}>Preferred Group Size</Text>
       <Dropdown
         style={[styles.dropdown, groupSizeFocus && { borderColor: '#172554' }]}
@@ -81,16 +123,15 @@ const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
         labelField="label"
         valueField="value"
         placeholder={!groupSizeFocus ? 'Choose group size' : '...'}
-        value={groupSize}
+        value={formData.groupSize}
         onFocus={() => setGroupSizeFocus(true)}
         onBlur={() => setGroupSizeFocus(false)}
         onChange={item => {
-          setGroupSize(item.value);
+          setFormData(prev => ({ ...prev, groupSize: item.value }));
           setGroupSizeFocus(false);
         }}
       />
 
-      {/* Preferred Study Duration Dropdown */}
       <Text style={styles.label}>Preferred Study Duration</Text>
       <Dropdown
         style={[styles.dropdown, studyDurationFocus && { borderColor: '#172554' }]}
@@ -103,16 +144,15 @@ const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
         labelField="label"
         valueField="value"
         placeholder={!studyDurationFocus ? 'Choose study duration' : '...'}
-        value={studyDuration}
+        value={formData.studyDuration}
         onFocus={() => setStudyDurationFocus(true)}
         onBlur={() => setStudyDurationFocus(false)}
         onChange={item => {
-          setStudyDuration(item.value);
+          setFormData(prev => ({ ...prev, studyDuration: item.value }));
           setStudyDurationFocus(false);
         }}
       />
 
-      {/* Preferred Demographic Dropdown */}
       <Text style={styles.label}>Preferred Demographic</Text>
       <Dropdown
         style={[styles.dropdown, demographicFocus && { borderColor: '#172554' }]}
@@ -125,22 +165,25 @@ const StudyForm: React.FC<StudyFormProps> = ({ onSubmit }) => {
         labelField="label"
         valueField="value"
         placeholder={!demographicFocus ? 'Choose demographic' : '...'}
-        value={demographic}
+        value={formData.demographic}
         onFocus={() => setDemographicFocus(true)}
         onBlur={() => setDemographicFocus(false)}
         onChange={item => {
-          setDemographic(item.value);
+          setFormData(prev => ({ ...prev, demographic: item.value }));
           setDemographicFocus(false);
         }}
       />
 
-      {/* Continue Button */}
-      <TouchableOpacity style={styles.continueButton} onPress={onSubmit}>
+      <TouchableOpacity 
+        style={styles.continueButton} 
+        onPress={handleSubmit}
+      >
         <Text style={styles.continueButtonText}>Continue</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

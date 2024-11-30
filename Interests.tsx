@@ -1,6 +1,8 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import BackButton from './BackButton';
+import { useSignUp } from './SignupContext';
 
 type InterestButtonProps = {
   emoji: string;
@@ -36,7 +38,10 @@ const interests = [
 ];
 
 const InterestsSelection: React.FC = () => {
+  const navigation = useNavigation();
+  const { updateSignUpData, submitSignUpData } = useSignUp();
   const [selectedInterests, setSelectedInterests] = React.useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const toggleInterest = (interest: string) => {
     setSelectedInterests((prev) =>
@@ -48,10 +53,41 @@ const InterestsSelection: React.FC = () => {
     );
   };
 
+  const handleSignUp = async () => {
+    if (selectedInterests.length === 0) {
+      Alert.alert('Error', 'Please select at least one interest');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Update the signup context with selected interests
+      await updateSignUpData({
+        interests: selectedInterests
+      });
+
+      // Submit all signup data to Firebase
+      await submitSignUpData();
+
+      // Navigate to home screen or success screen
+      // navigation.navigate('HomePage');
+      
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to complete signup. Please try again.'
+      );
+      console.error('Signup error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-       
-      <View style={styles.innerContainer}>  <BackButton />
+      <View style={styles.innerContainer}>
+        <BackButton />
         <Image
           source={{
             uri: "https://cdn.builder.io/api/v1/image/assets/TEMP/992ceab560384b3926d9ef05d76326aa12c3e494a33455878dc7b5bf7883a752?placeholderIfAbsent=true&apiKey=3ec34e30ebf54f81be6ec584986e725a",
@@ -60,7 +96,9 @@ const InterestsSelection: React.FC = () => {
           accessibilityLabel="App logo"
         />
         <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Select up to <Text style={[styles.titleText,{color:"#172554"}]}>3 interests</Text></Text>
+          <Text style={styles.titleText}>
+            Select up to <Text style={[styles.titleText, { color: "#172554" }]}>3 interests</Text>
+          </Text>
         </View>
         <View style={styles.interestsContainer}>
           {interests.map((interest) => (
@@ -74,12 +112,18 @@ const InterestsSelection: React.FC = () => {
           ))}
         </View>
         <TouchableOpacity
-          style={styles.signUpButton}
-          onPress={() => {/* Handle sign up */}}
+          style={[
+            styles.signUpButton,
+            isSubmitting && styles.disabledButton
+          ]}
+          onPress={handleSignUp}
+          disabled={isSubmitting}
           accessibilityLabel="Sign up"
           accessibilityRole="button"
         >
-          <Text style={styles.signUpButtonText}>Sign up</Text>
+          <Text style={styles.signUpButtonText}>
+            {isSubmitting ? 'Creating Account...' : 'Sign up'}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -159,6 +203,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  disabledButton: {
+    backgroundColor: '#94a3b8',
+    opacity: 0.7,
   },
 });
 

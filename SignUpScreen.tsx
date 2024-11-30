@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import SignUpForm from './SignUpForm';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BackButton from './BackButton';
+import { useSignUp } from './SignupContext';
 // Define RootStackParamList if not already defined
 type RootStackParamList = {
   SignUp: undefined;
@@ -12,17 +13,17 @@ type RootStackParamList = {
 };
 
 const SignUpScreen: React.FC = () => {
-  // Access the navigation prop
+  const { signUpData, updateSignUpData } = useSignUp();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleSubmit = () => {
     // Navigate to AcademicScreen
-    navigation.navigate('AcademicScreen');
+   navigation.navigate('AcademicScreen');
   };
 
   return (
     <View style={styles.container}>
-      
+       <BackButton />
       <Image
         source={{
           uri: "https://cdn.builder.io/api/v1/image/assets/TEMP/992ceab560384b3926d9ef05d76326aa12c3e494a33455878dc7b5bf7883a752?placeholderIfAbsent=true&apiKey=3ec34e30ebf54f81be6ec584986e725a",
